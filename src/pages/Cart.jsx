@@ -6,9 +6,12 @@ import {
   deleteFromCart,
   incrementQuantity,
   decrementQuantity,
+  clearCart,
 } from "../redux/cartSlice";
 import { toast } from "react-toastify";
 import MyContext from "../context/Data/myContext";
+import { addDoc, collection } from "firebase/firestore";
+import { fireDB } from "../firebase/FirebaseConfig"; // Adjust the path based on your project structure
 
 function Cart() {
   const context = useContext(MyContext);
@@ -36,7 +39,7 @@ function Cart() {
 
   const handleDelete = (item) => {
     dispatch(deleteFromCart(item));
-    toast.success("Item removed from cart", { autoClose: 3000 }); // 3 seconds duration
+    toast.success("Item removed from cart", { autoClose: 1000 });
   };
 
   const handleIncrement = (item) => {
@@ -45,6 +48,97 @@ function Cart() {
 
   const handleDecrement = (item) => {
     dispatch(decrementQuantity(item));
+  };
+
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  const buyNow = async () => {
+    // validation
+    if (name === "" || address === "" || pincode === "" || phoneNumber === "") {
+      return toast.error("All fields are required", {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    }
+
+    const addressInfo = {
+      name,
+      address,
+      pincode,
+      phoneNumber,
+      date: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      }),
+    };
+
+    var options = {
+      key: "rzp_test_gWjhFGH78aOz6x",
+      key_secret: "xoNlekX5s25IICNebzQy6Bfi",
+      amount: parseInt(grandTotal * 100), // convert to paisa
+      currency: "INR",
+      order_receipt: "order_rcptid_" + name,
+      name: "CLOTH-IT",
+      description: "for testing purpose",
+      handler: async function (response) {
+        toast.success("Payment Successful");
+
+        const paymentId = response.razorpay_payment_id;
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        handleDelete();
+        const orderInfo = {
+          cartItems,
+          addressInfo,
+          date: new Date().toLocaleString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+          }),
+          email: user?.user?.email,
+          userid: user?.user?.uid,
+          paymentId,
+        };
+
+        try {
+          const result = await addDoc(collection(fireDB, "orders"), orderInfo);
+
+          dispatch(clearCart());
+        } catch (error) {
+          console.error("Error storing order in Firestore:", error);
+        }
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    if (window.Razorpay) {
+      var pay = new window.Razorpay(options);
+      pay.open();
+    } else {
+      console.error("Razorpay SDK not loaded");
+      toast.error("Razorpay SDK not loaded", {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    }
   };
 
   return (
@@ -181,7 +275,17 @@ function Cart() {
                 </p>
               </div>
             </div>
-            <Modal />
+            <Modal
+              name={name}
+              address={address}
+              pincode={pincode}
+              phoneNumber={phoneNumber}
+              setName={setName}
+              setAddress={setAddress}
+              setPincode={setPincode}
+              setPhoneNumber={setPhoneNumber}
+              buyNow={buyNow}
+            />
           </div>
         </div>
       </div>

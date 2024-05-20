@@ -14,7 +14,7 @@ const saveState = (state) => {
     const serializedState = JSON.stringify(state);
     localStorage.setItem("cart", serializedState);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
