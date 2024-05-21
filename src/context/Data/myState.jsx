@@ -62,6 +62,9 @@ function MyState(props) {
       toast.success("Product added successfully");
       getProductData();
       setLoading(false);
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 2000);
     } catch (error) {
       console.error(error);
       setLoading(false);

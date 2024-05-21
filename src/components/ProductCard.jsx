@@ -24,7 +24,6 @@ function ProductCard() {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Filter the products based on searchkey, filterType, and filterPrice
   const filteredProducts = product.filter((item) => {
     const matchesSearch = item.title
       .toLowerCase()
@@ -35,7 +34,11 @@ function ProductCard() {
       : true;
     return matchesSearch && matchesType && matchesPrice;
   });
-
+  const productIn = () => {
+    setTimeout(() => {
+      window.location.href = `/productinfo/${item.id}`;
+    }, 2000);
+  };
   return (
     <section className="text-gray-600 body-font">
       <div className="container px-5 py-8 md:py-16 mx-auto">
@@ -55,14 +58,11 @@ function ProductCard() {
             filteredProducts.map((item, index) => {
               const { title, price, imageUrl } = item;
               return (
-                <div
-                  onClick={() =>
-                    (window.location.href = `/productinfo/${item.id}`)
-                  }
-                  key={index}
-                  className="card p-4 drop-shadow-lg"
-                >
-                  <div className="card-img h-full border-2 hover:shadow-gray-100 hover:shadow-2xl transition-shadow duration-300 ease-in-out border-gray-200 border-opacity-60 rounded-2xl overflow-hidden">
+                <div key={index} className="card p-4 drop-shadow-lg">
+                  <div
+                    onClick={productIn}
+                    className="card-img h-full border-2 hover:shadow-gray-100 hover:shadow-2xl transition-shadow duration-300 ease-in-out border-gray-200 border-opacity-60 rounded-2xl overflow-hidden"
+                  >
                     <img src={imageUrl} alt={title} />
                   </div>
                   <div className="card-title">{title}</div>
